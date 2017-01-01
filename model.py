@@ -2,7 +2,7 @@ HIGH, LOW = "HIGH", "LOW"
 
 
 class Brick:
-    def __init__(self, name, pin):
+    def __init__(self, name, pin=None):
         self.name = name
         self.pin = pin
 
@@ -24,14 +24,14 @@ class Actuator(Brick):
 
 
 class State:
-    def __init__(self, name, action):
+    def __init__(self, name, action=None):
         self.name = name
         self.action = action
         self.transition = None
 
 
 class Action:
-    def __init__(self, actuator, value):
+    def __init__(self, actuator, value=None):
         self.actuator = actuator
         self.value = value
 
@@ -47,14 +47,18 @@ class Low(Action):
 
 
 class Transition:
-    def __init__(self, sensor, value, next):
+    def __init__(self, sensor=None, value=None, next=None):
         self.sensor = sensor
         self.value = value
         self.next = next
 
 
 class App:
-    def __init__(self, name, bricks, states):
+    def __init__(self, name, bricks=None, states=None):
+        if states is None:
+            states = []
+        if bricks is None:
+            bricks = []
         self.name = name
         self.bricks = bricks
         self.states = states
@@ -76,7 +80,8 @@ class App:
             self.code.append("void {}() {{".format("state_" + state.name))
             self.code.append("\tdigitalWrite({}, {})".format(state.action.actuator.name, state.action.value))
             self.code.append("\tboolean guard = millis() - time > debounce;")
-            self.code.append("\tif (digitalRead({}) == {} && guard) {{".format(state.transition.sensor.name, state.transition.value))
+            self.code.append(
+                "\tif (digitalRead({}) == {} && guard) {{".format(state.transition.sensor.name, state.transition.value))
             self.code.append("\t\ttime = millis();")
             self.code.append("\t\t{}();".format("state_" + state.transition.next.name))
             self.code.append("\t} else {")
@@ -84,15 +89,14 @@ class App:
             self.code.append("\t}")
             self.code.append("}")
 
-
     def generate(self):
         self.code = []
         self._setup()
         self._behaviour()
 
         self.code = '\n'.join(self.code)
-        with open("code.ino", "w+") as file:
-            file.writelines(self.code)
+        with open("generated.ino", "w+") as file:
+            file.write(self.code)
 
 
 if __name__ == '__main__':
