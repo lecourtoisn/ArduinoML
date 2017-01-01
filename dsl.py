@@ -16,21 +16,6 @@ class BrickSugar:
         self.brick.pin = pin
 
 
-class TransitionSugar:
-    def __init__(self, state_sugar):
-        self.state_sugar = state_sugar
-
-    def when(self, sensor_name):
-        global bricks
-        sensor = bricks[sensor_name]
-        self.state_sugar.state.transition.sensor = sensor
-        return self
-
-    def is_set_to(self, value):
-        self.state_sugar.state.transition.value = value
-        return self.state_sugar
-
-
 class StateSugar:
     def __init__(self, name):
         global states
@@ -43,9 +28,8 @@ class StateSugar:
         return ActionSugar(self)
 
     def go_to(self, state_name):
-        state = states[state_name]
         self.state.transition = Transition()
-        self.state.transition.next = state
+        self.state.transition.next = state_name
         return TransitionSugar(self)
 
 
@@ -55,6 +39,21 @@ class ActionSugar:
 
     def to(self, value):
         self.state_sugar.state.action.value = value
+        return self.state_sugar
+
+
+class TransitionSugar:
+    def __init__(self, state_sugar):
+        self.state_sugar = state_sugar
+
+    def when(self, sensor_name):
+        global bricks
+        sensor = bricks[sensor_name]
+        self.state_sugar.state.transition.sensor = sensor
+        return self
+
+    def is_set_to(self, value):
+        self.state_sugar.state.transition.value = value
         return self.state_sugar
 
 
@@ -76,9 +75,13 @@ def new_state(name):
 
 
 def generate():
-    app.bricks = bricks
-    app.states = states
+    app.bricks = list(bricks.values())
+    app.states = list(states.values())
 
+    for state in states.values():
+        print(state)
+        next_state = states[state.transition.next]
+        state.transition.next = next_state
     app.generate()
 
 

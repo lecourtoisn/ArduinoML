@@ -78,14 +78,14 @@ class App:
         self.code.append("long time = 0; long debounce = 200;")
         for state in self.states:
             self.code.append("void {}() {{".format("state_" + state.name))
-            self.code.append("\tdigitalWrite({}, {})".format(state.action.actuator.name, state.action.value))
+            self.code.append("\tdigitalWrite({}, {});".format(state.action.actuator.name, state.action.value))
             self.code.append("\tboolean guard = millis() - time > debounce;")
             self.code.append(
                 "\tif (digitalRead({}) == {} && guard) {{".format(state.transition.sensor.name, state.transition.value))
             self.code.append("\t\ttime = millis();")
-            self.code.append("\t\t{}();".format("state_" + state.transition.next.name))
+            self.code.append("\t\tstate_{}();".format(state.transition.next.name))
             self.code.append("\t} else {")
-            self.code.append("\t\t{}();".format("state_" + state.name))
+            self.code.append("\t\tstate_{}();".format(state.name))
             self.code.append("\t}")
             self.code.append("}")
 
@@ -93,10 +93,11 @@ class App:
         self.code = []
         self._setup()
         self._behaviour()
+        self.code.append("void loop() {{ state_{}(); }}".format(self.states[0].name))
 
-        self.code = '\n'.join(self.code)
+        self.str_code = '\n'.join(self.code)
         with open("generated.ino", "w+") as file:
-            file.write(self.code)
+            file.write(self.str_code)
 
 
 if __name__ == '__main__':
