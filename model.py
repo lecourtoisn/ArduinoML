@@ -98,7 +98,7 @@ class App:
         self._behaviour()
 
         self.str_code = '\n'.join(self.code)
-        with open("generated.ino", "w+") as file:
+        with open("{}.ino".format(self.name), "w+") as file:
             file.write(self.str_code)
 
 
