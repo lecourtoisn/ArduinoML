@@ -24,8 +24,9 @@ class StateSugar:
 
     def switch(self, actuator_name):
         actuator = bricks[actuator_name]
-        self.state.action = (Action(actuator))
-        return ActionSugar(self)
+        new_action = Action(actuator)
+        self.state.actions.append(new_action)
+        return ActionSugar(self, new_action)
 
     def go_to(self, state_name):
         self.state.transition = Transition()
@@ -34,11 +35,12 @@ class StateSugar:
 
 
 class ActionSugar:
-    def __init__(self, state_sugar):
+    def __init__(self, state_sugar, action):
         self.state_sugar = state_sugar
+        self.action = action
 
     def to(self, value):
-        self.state_sugar.state.action.value = value
+        self.action.value = value
         return self.state_sugar
 
 
@@ -79,18 +81,7 @@ def generate():
     app.states = list(states.values())
 
     for state in states.values():
-        print(state)
         next_state = states[state.transition.next]
         state.transition.next = next_state
     app.generate()
 
-
-if __name__ == '__main__':
-    app("test")
-    new_actuator("led").on(9)
-    new_sensor("button").on(12)
-
-    for brick in bricks.values():
-        print(brick.name, brick.pin)
-
-    generate()

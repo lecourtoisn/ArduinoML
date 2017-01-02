@@ -24,9 +24,9 @@ class Actuator(Brick):
 
 
 class State:
-    def __init__(self, name, action=None):
+    def __init__(self, name, actions=None):
         self.name = name
-        self.action = action
+        self.actions = actions or []
         self.transition = None
 
 
@@ -78,7 +78,8 @@ class App:
         self.code.append("long time = 0; long debounce = 200;")
         for state in self.states:
             self.code.append("void {}() {{".format("state_" + state.name))
-            self.code.append("\tdigitalWrite({}, {});".format(state.action.actuator.name, state.action.value))
+            for action in state.actions:
+                self.code.append("\tdigitalWrite({}, {});".format(action.actuator.name, action.value))
             self.code.append("\tboolean guard = millis() - time > debounce;")
             self.code.append(
                 "\tif (digitalRead({}) == {} && guard) {{".format(state.transition.sensor.name, state.transition.value))
@@ -89,11 +90,12 @@ class App:
             self.code.append("\t}")
             self.code.append("}")
 
+            self.code.append("void loop() {{ state_{}(); }}".format(self.states[0].name))
+
     def generate(self):
         self.code = []
         self._setup()
         self._behaviour()
-        self.code.append("void loop() {{ state_{}(); }}".format(self.states[0].name))
 
         self.str_code = '\n'.join(self.code)
         with open("generated.ino", "w+") as file:
@@ -104,8 +106,8 @@ if __name__ == '__main__':
     button = Sensor("button", 9)
     led = Actuator("led", 12)
 
-    on = State("on", High(led))
-    off = State("off", Low(led))
+    on = State("on", [High(led), Low(led)])
+    off = State("off", [Low(led)])
 
     on.transition = Transition(button, HIGH, off)
     off.transition = Transition(button, HIGH, on)
