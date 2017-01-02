@@ -90,7 +90,7 @@ class App:
             self.code.append("\t}")
             self.code.append("}")
 
-            self.code.append("void loop() {{ state_{}(); }}".format(self.states[0].name))
+        self.code.append("void loop() {{ state_{}(); }}".format(self.states[0].name))
 
     def generate(self):
         self.code = []
